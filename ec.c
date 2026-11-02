@@ -1,28 +1,56 @@
 #include "ec.h"
 
-int mod_inverse(int x, int n)
-{
-	if(x == 0)
-	{
-		return 0;
-	}
+int mod_inverse(int a, int m) {
+    int m0 = m;
+    int y = 0, x = 1;
 
+    // Base case for m = 1
+    if (m == 1) {
+        return 0;
+    }
 
+    while (a > 1) {
+        // Return -1 if a and m are not coprime (no inverse exists)
+        if (m == 0) {
+            return -1; 
+        }
+        
+        int q = a / m;
+        int t = m;
+
+        // m is remainder now, process same as Euclid's algorithm
+        m = a % m;
+        a = t;
+        t = y;
+
+        // Update y and x
+        y = x - q * y;
+        x = t;
+    }
+
+    // Make x positive
+    if (x < 0) {
+        x += m0;
+    }
+
+    return x;
 }
 
-slope_t ec_slope(point_t a, point_t b, int n)
+int ec_slope(point_t a, point_t b, int n)
 {
-	slope_t m;
+	int m, rise, run;
 
 	if(ec_eq(a, b))
 	{
-		m.rise = (3 * a.x * a.x) % n;
-		m.run = (2 * a.y) % n;
+		rise = (3 * a.x * a.x + 1) % n;
+		run = (2 * a.y) % n;
+		m = (rise * mod_inverse(run, n)) % n;
 	}
 	else
 	{
-		m.rise = (b.y - a.y) % n;
-		m.run = (b.x - a.x) % n;
+		rise = (b.y - a.y) % n;
+		run = (b.x - a.x) % n;
+		m = (mod_inverse(rise, n) * run) % n;
 	}
 
 	return m;
@@ -35,10 +63,20 @@ int ec_eq(point_t a, point_t b)
 
 point_t ec_add(point_t P, point_t Q, int n)
 {
-	slope_t m = ec_slope(P, Q, n);
+	int m = ec_slope(P, Q, n);
 
-	int x3 = ((m.rise * m.rise - P.x - P.y) / (m.run * m.run)) % n;
-	int y3 = (((m.rise * (P.x - x3)) - P.y) / m.run) % n;
+	int x3 = (m * m - P.x - Q.x) % n;
+	int y3 = ((m * (P.x - x3 % n)) - P.y) % n;
+
+	// This probably isn't correct?
+	while(x3 < 0)
+	{
+		x3 += n;
+	}	
+	while(y3 < 0)
+	{
+		y3 += n;
+	}
 
 	return (point_t){.x = x3, .y = y3};
 }

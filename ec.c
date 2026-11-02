@@ -1,4 +1,5 @@
 #include "ec.h"
+#include "def.h"
 
 int mod_inverse(int a, int m) {
     int m0 = m;
@@ -42,7 +43,7 @@ int ec_slope(point_t a, point_t b, int n)
 
 	if(ec_eq(a, b))
 	{
-		rise = (3 * a.x * a.x + 1) % n;
+		rise = (3 * a.x * a.x + A) % n;
 		run = (2 * a.y) % n;
 		m = (rise * mod_inverse(run, n)) % n;
 	}
@@ -66,16 +67,21 @@ point_t ec_add(point_t P, point_t Q, int n)
 	int m = ec_slope(P, Q, n);
 
 	int x3 = (m * m - P.x - Q.x) % n;
+	if(x3 < 0 && mod_inverse(x3, n) == 1)
+	{
+		while(x3 < 0)
+		{
+			x3 += n;
+		}
+	}
+	
 	int y3 = ((m * (P.x - x3 % n)) - P.y) % n;
-
-	// This probably isn't correct?
-	while(x3 < 0)
+	if(y3 < 0 && mod_inverse(y3, n) == 1)
 	{
-		x3 += n;
-	}	
-	while(y3 < 0)
-	{
-		y3 += n;
+		while(y3 < 0)
+		{
+			y3 += n;
+		}
 	}
 
 	return (point_t){.x = x3, .y = y3};
@@ -85,10 +91,23 @@ point_t ec_mult(point_t P, int k, int n)
 {
 	point_t ret = P;
 
-	for(int i = 0; i < k; i++)
+	for(int i = 0; i < k - 1; i++)
 	{
-		ret = ec_add(ret, ret, n);
+		ret = ec_add(ret, P, n);
 	}
 
 	return ret;
 }
+
+int ec_factorize(int x, int n)
+{
+	point_t P = {.x = 0, .y = 2};	
+	
+	int f = x;
+	int k = 2;
+	
+	
+
+	return 0;
+}
+

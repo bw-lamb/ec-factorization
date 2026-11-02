@@ -37,6 +37,15 @@ int mod_inverse(int a, int m) {
     return x;
 }
 
+int gcd(int a, int b) {
+    while (b != 0) {
+        int temp = b;
+        b = a % b;
+        a = temp;
+    }
+    return a;
+}
+
 int ec_slope(point_t a, point_t b, int n, int *m)
 {
 	int rise, run, rise_inv, run_inv;
@@ -58,10 +67,11 @@ int ec_slope(point_t a, point_t b, int n, int *m)
 
 	if(run_inv == -1)
 	{
+		return run;
 	}
 	else if(rise_inv == -1)
 	{
-
+		return rise;
 	}
 
 	return 0;
@@ -124,20 +134,36 @@ int ec_mult(point_t P, int k, int n, point_t *out)
 	return 0;
 }
 
-int ec_factorize(int n)
+int fac(int n)
+{
+	if(n <= 1)
+		return 1;
+	else
+		return n * fac(n - 1);
+}
+
+#include <stdio.h>
+
+int ec_factorize(int n, int *rem)
 {
 	point_t P = {.x = 0, .y = 2};
 	int factor = 0;
 
-	for(int k = 2, done = 0; done != 1; k++)
+	int K_LIMIT = 500;
+	for(int k = 2, done = 0; !done && k < K_LIMIT; k++)
 	{
+		printf("k=%d\n", k);
 		point_t sum;
-		int res = ec_mult(P, k, n, &sum);
-		if(0)
+		int res = ec_mult(P, fac(k), n, &sum);
+		// Invertible factor in slope
+		if(res)
 		{
+			factor = gcd(res, n);
+			done = 1;
 		}
 	}
 
+	*rem = n / factor;
 	return factor;
 }
 

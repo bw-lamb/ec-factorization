@@ -39,10 +39,16 @@ Test(EC_Mult, Small)
 	cr_assert(ec_eq(expected, r));
 }
 
-/*
 Test(EC_Factor, Small)
 {
-	int n = ec_factorize(10);
-	cr_assert(n == 2 || n == 5);
+	int rem;
+	int n = ec_factorize(10, &rem);
+	cr_assert(n == 2 && rem == 5);
 }
-*/
+
+Test(EC_Factor, Larger)
+{
+	int rem;
+	int n = ec_factorize(493, &rem);
+	cr_assert(n == 58 && rem == 29);
+}

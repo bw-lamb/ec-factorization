@@ -37,24 +37,34 @@ int mod_inverse(int a, int m) {
     return x;
 }
 
-int ec_slope(point_t a, point_t b, int n)
+int ec_slope(point_t a, point_t b, int n, int *m)
 {
-	int m, rise, run;
+	int rise, run, rise_inv, run_inv;
 
 	if(ec_eq(a, b))
 	{
 		rise = (3 * a.x * a.x + A) % n;
 		run = (2 * a.y) % n;
-		m = (rise * mod_inverse(run, n)) % n;
+		run_inv = mod_inverse(run, n);
+		*m = (rise * run_inv) % n;
 	}
 	else
 	{
 		rise = (b.y - a.y) % n;
 		run = (b.x - a.x) % n;
-		m = (mod_inverse(rise, n) * run) % n;
+		rise_inv = mod_inverse(rise, n);
+		*m = (rise_inv * run) % n;
 	}
 
-	return m;
+	if(run_inv == -1)
+	{
+	}
+	else if(rise_inv == -1)
+	{
+
+	}
+
+	return 0;
 }
 
 int ec_eq(point_t a, point_t b)
@@ -62,10 +72,17 @@ int ec_eq(point_t a, point_t b)
 	return a.x == b.x && a.y == b.y;
 }
 
-point_t ec_add(point_t P, point_t Q, int n)
+int ec_add(point_t P, point_t Q, int n, point_t *sum)
 {
-	int m = ec_slope(P, Q, n);
+	int m;
 
+	int res = ec_slope(P, Q, n, &m);
+	// Failure to invert part of slope
+	if(res)
+	{
+		return res;
+	}
+		
 	int x3 = (m * m - P.x - Q.x) % n;
 	if(x3 < 0 && mod_inverse(x3, n) == 1)
 	{
@@ -84,30 +101,43 @@ point_t ec_add(point_t P, point_t Q, int n)
 		}
 	}
 
-	return (point_t){.x = x3, .y = y3};
+	sum->x = x3; 
+	sum->y = y3;
+	return 0;
 }
 
-point_t ec_mult(point_t P, int k, int n)
+int ec_mult(point_t P, int k, int n, point_t *out)
 {
 	point_t ret = P;
 
 	for(int i = 0; i < k - 1; i++)
 	{
-		ret = ec_add(ret, P, n);
+	 	int res = ec_add(ret, P, n, &ret);
+		// Invertible factor in slope
+		if(res)
+		{
+			return res;
+		}
 	}
 
-	return ret;
+	*out = ret;
+	return 0;
 }
 
-int ec_factorize(int x, int n)
+int ec_factorize(int n)
 {
-	point_t P = {.x = 0, .y = 2};	
-	
-	int f = x;
-	int k = 2;
-	
-	
+	point_t P = {.x = 0, .y = 2};
+	int factor = 0;
 
-	return 0;
+	for(int k = 2, done = 0; done != 1; k++)
+	{
+		point_t sum;
+		int res = ec_mult(P, k, n, &sum);
+		if(0)
+		{
+		}
+	}
+
+	return factor;
 }
 
